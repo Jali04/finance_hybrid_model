@@ -51,6 +51,14 @@ class Evaluator:
         # 1. Data Load
         raw_path = "data/raw/GSPC_raw.parquet"
         df = pd.read_parquet(raw_path)
+        
+        # Load VIX Data (Fix for KeyError: VIX_Close)
+        vix_path = "data/raw/VIX_raw.parquet"
+        if os.path.exists(vix_path):
+            print("--- Merging VIX data ---")
+            vix_df = pd.read_parquet(vix_path)
+            df = self.engineer.add_external_data(df, vix_df, prefix='VIX')
+            
         df = self.engineer.add_all_features(df)
         _, _, test_df = self.processor.split_data(df)
         

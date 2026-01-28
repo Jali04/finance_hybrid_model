@@ -20,6 +20,36 @@ class FeatureEngineer:
         self.bb_window = 20
         self.bb_std = 2
 
+    def add_external_data(self, main_df, external_df, prefix='VIX', fill_method='ffill'):
+        """
+        Merges external data (like VIX) into the main dataframe based on the Date index.
+        
+        Args:
+            main_df (pd.DataFrame): The primary asset data.
+            external_df (pd.DataFrame): The external data (e.g., VIX).
+            prefix (str): Prefix for the new columns (e.g., 'VIX').
+            fill_method (str): Method to handle missing values ('ffill' recommended).
+            
+        Returns:
+            pd.DataFrame: Merged dataframe.
+        """
+        # Ensure we only take the 'Close' column from external data usually
+        # But we can be flexible. Let's assume we want 'Close' and rename it.
+        if 'Close' not in external_df.columns:
+            raise ValueError(f"External dataframe must have a 'Close' column. Found: {external_df.columns}")
+            
+        ext_series = external_df['Close'].rename(f"{prefix}_Close")
+        
+        # Merge left to keep main_df structure
+        merged_df = main_df.merge(ext_series, left_index=True, right_index=True, how='left')
+        
+        # Fill missing values (VIX might have slight holiday diffs or missing days)
+        if fill_method == 'ffill':
+            merged_df[f"{prefix}_Close"] = merged_df[f"{prefix}_Close"].ffill()
+            
+        return merged_df
+
+
     def calculate_log_returns(self, df, price_col='Close'):
         """
         Calculates Logarithmic Returns.

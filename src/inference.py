@@ -39,7 +39,7 @@ class InferenceEngine:
         # Let's assume 14 features for now as we saw in training.
         # Or better: init lazily or generic.
         self.model = LSTMTransformerHybrid(
-            input_dim=14, # Fixed strictly based on our feature set
+            input_dim=15, # Updated to 15 to include VIX_Close
             lstm_hidden_dim=self.config['hidden_dim'],
             trans_heads=self.config['heads'],
             trans_layers=self.config['trans_layers']
@@ -74,12 +74,21 @@ class InferenceEngine:
         print(f"Fetching live data for {ticker} since {start_date}...")
         df = yf.download(ticker, start=start_date, progress=False, auto_adjust=True)
         
-        if df.empty:
-            raise ValueError("No data downloaded.")
+        # Fetch VIX for the same period
+        print(f"Fetching live VIX data since {start_date}...")
+        vix_df = yf.download("^VIX", start=start_date, progress=False, auto_adjust=True)
+        
+        if df.empty or vix_df.empty:
+            raise ValueError("No data downloaded for ticker or VIX.")
             
         # Flatten MultiIndex if present
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
+        if isinstance(vix_df.columns, pd.MultiIndex):
+            vix_df.columns = vix_df.columns.get_level_values(0)
+            
+        # Merge VIX
+        df = self.engineer.add_external_data(df, vix_df, prefix='VIX')
             
         # 2. Feature Engineering
         df = self.engineer.add_all_features(df)

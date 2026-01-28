@@ -7,6 +7,7 @@ import pandas as pd
 import os
 import joblib
 import sys
+from datetime import datetime
 
 # Allow running this script directly from anywhere (adds project root to path)
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -49,6 +50,15 @@ class Trainer:
             raise FileNotFoundError(f"Data not found at {raw_path}. Run loader first.")
             
         df = pd.read_parquet(raw_path)
+
+        # Load VIX Data
+        vix_path = "data/raw/VIX_raw.parquet"
+        if os.path.exists(vix_path):
+            print(f"[{datetime.now()}] Merging VIX data...")
+            vix_df = pd.read_parquet(vix_path)
+            df = self.engineer.add_external_data(df, vix_df, prefix='VIX')
+        else:
+            print("WARNING: VIX data not found. Training without it.")
         
         # Feature Engineering (Calculate Indicators)
         # We do this BEFORE splitting because indicators need some history (warmup)

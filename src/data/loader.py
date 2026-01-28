@@ -103,13 +103,9 @@ def download_data(ticker="^GSPC", start_date="2010-01-01", end_date=None, save_d
 if __name__ == "__main__":
     # Example usage:
     # Download S&P 500 (^GSPC) data.
-    # We purposefully start early (2010) to have history for initial indicators 
-    # when the Training set (2019) begins.
-    data = download_data(ticker="^GSPC", start_date="2010-01-01")
+    download_data(ticker="^GSPC", start_date="2010-01-01")
     
-    # Optional: Display first few rows to verify structure
-    if data is not None:
-        print("\n--- Head of Data ---")
-        print(data.head())
-        print("\n--- Tail of Data ---")
-        print(data.tail())
+    # Download VIX (^VIX) data.
+    # We download this as a separate file to be merged later in the pipeline.
+    download_data(ticker="^VIX", start_date="2010-01-01")
+
